@@ -70,7 +70,7 @@ This project is designed for:
 
 ## Project Structure
 ``` bash
-aml-dashboard/
+frontend/
 │
 ├── node_modules/
 ├── public/

@@ -57,3 +57,9 @@ export function Topbar({ clock, alertCount, isMobile, onMenuClick, onAlertsClick
         </div>
     );
 }
+
+// import { exportCSV } from "../constants/generateData";
+// // inside Topbar:
+// <button onClick={() => exportCSV(dataset.transactions, "aml_transactions.csv")}>
+//     Download CSV
+// </button>

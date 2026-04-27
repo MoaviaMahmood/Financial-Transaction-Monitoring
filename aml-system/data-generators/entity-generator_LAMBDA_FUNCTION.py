@@ -6,9 +6,8 @@ import csv
 import os
 import boto3
 import io
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from dataclasses import dataclass, asdict
-from datetime import datetime
 
 # Windows console safety
 sys.stdout.reconfigure(encoding="utf-8", errors="replace")
@@ -16,8 +15,8 @@ sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 # ===========================================================
 # S3 CONFIG
 # ===========================================================
-S3_BUCKET = "aml-fyp-stream-bucket-591950085395-eu-north-1-an"
-S3_PREFIX = "aml-data/"
+S3_BUCKET = os.environ["BUCKET_NAME"]
+S3_PREFIX = os.environ.get("S3_PREFIX", "aml-data/")
 
 s3 = boto3.client("s3")
 
@@ -205,15 +204,10 @@ def generate_accounts(customers: list[Customer], n: int) -> list[Account]:
 # ===========================================================
 # UPLOAD TO S3
 # ===========================================================
-def upload_csv(data, name):
-    timestamp = datetime.utcnow().strftime("%Y-%m-%d_%H-%M-%S")
-
-    base, ext = os.path.splitext(name)
-
-    # customers / accounts / transactions / alerts
-    folder = base
-
-    key = f"{S3_PREFIX}{folder}/{base}_{timestamp}{ext}"
+def upload_csv(data, name, partition_by_date=False):
+    if not data:
+        print(f"No data to upload for {name}")
+        return
 
     rows = [asdict(d) for d in data]
     buf = io.StringIO()
@@ -221,21 +215,29 @@ def upload_csv(data, name):
     writer.writeheader()
     writer.writerows(rows)
 
-    s3.put_object(
-        Bucket=S3_BUCKET,
-        Key=key,
-        Body=buf.getvalue()
-    )
+    now = datetime.now(timezone.utc)
+    base, ext = os.path.splitext(name)
+    folder = base  # customers / accounts
+
+    if partition_by_date:
+        date_partition = now.strftime("%Y-%m-%d")        # 2026-04-27
+        time_suffix    = now.strftime("%H-%M-%S-%f")     # 13-48-42-123456
+        key = f"{S3_PREFIX}{folder}/dt={date_partition}/{base}_{time_suffix}{ext}"
+    else:
+        timestamp = now.strftime("%Y-%m-%d_%H-%M-%S")
+        key = f"{S3_PREFIX}{folder}/{base}_{timestamp}{ext}"
+
+    s3.put_object(Bucket=S3_BUCKET, Key=key, Body=buf.getvalue())
 
 # ===========================================================
-# LAMBDA HANDLER
+# ULAMBDA HANDLER
 # ===========================================================
 def lambda_handler(event, context):
     customers = generate_customers(NUM_CUSTOMERS)
     accounts  = generate_accounts(customers, NUM_ACCOUNTS)
 
-    upload_csv(customers, "customers.csv")
-    upload_csv(accounts,  "accounts.csv")
+    upload_csv(customers, "customers.csv", partition_by_date=True)
+    upload_csv(accounts,  "accounts.csv",  partition_by_date=True)
 
     return {
         "status": "entities generated",

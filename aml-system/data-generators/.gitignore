@@ -3,3 +3,4 @@ aml_output/
 *.csv
 *.json
 *.parquet
+.env

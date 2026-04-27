@@ -6,3 +6,4 @@ articles/
 *.csv
 *.drawio
 *.bkp
+.env

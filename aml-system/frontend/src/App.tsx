@@ -150,20 +150,6 @@ export default function App() {
         >
             {/* Page header */}
             <div style={{ marginBottom: 20, animation: "fadeUp .5s ease both" }}>
-                <div style={{
-                    position: "fixed",
-                    top: 60,
-                    right: 20,
-                    zIndex: 9999,
-                    padding: "6px 12px",
-                    background: "#ff4c6c",
-                    color: "white",
-                    fontSize: 12,
-                    fontFamily: "monospace",
-                    borderRadius: 4,
-                  }}>
-                    activeNav: {activeNav}
-                </div>
                 <div className="page-title-text" style={{ fontFamily: "'Syne',sans-serif", fontWeight: 700, fontSize: 20, letterSpacing: ".05em", marginBottom: 4 }}>
                     {activeNav === "Overview"      && "AML Command Center"}
                     {activeNav === "Alerts"        && "All Alerts"}

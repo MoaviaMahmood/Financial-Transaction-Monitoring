@@ -41,6 +41,7 @@ export function Sidebar({ activeNav, setActiveNav, isMobile, sidebarOpen, alertC
 
     return (
         <aside
+            onClick={(e) => e.stopPropagation()}
             style={{
                 width: 210,
                 flexShrink: 0,
@@ -50,7 +51,16 @@ export function Sidebar({ activeNav, setActiveNav, isMobile, sidebarOpen, alertC
                 transition: "transform .3s ease",
                 background: C.surface,
                 ...(isMobile
-                    ? { position: "fixed", top: 56, left: 0, bottom: 0, zIndex: 160, transform: sidebarOpen ? "translateX(0)" : "translateX(-100%)" }
+                    ? {
+                        position: "fixed",
+                        top: 56,
+                        left: 0,
+                        bottom: 0,
+                        zIndex: 200,                          // ← bumped from 160
+                        transform: sidebarOpen ? "translateX(0)" : "translateX(-100%)",
+                        pointerEvents: sidebarOpen ? "auto" : "none",   // ← NEW
+                        boxShadow: sidebarOpen ? "4px 0 20px rgba(0,0,0,0.5)" : "none",
+                    }
                     : { position: "sticky", top: 56, height: "calc(100vh - 56px)" }),
             }}
         >

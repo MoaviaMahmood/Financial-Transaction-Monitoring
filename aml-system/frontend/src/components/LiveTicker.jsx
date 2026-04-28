@@ -1,7 +1,11 @@
 import { C } from "../constants/theme";
-import { TICKER_ITEMS } from "../constants/data";
 
-export function LiveTicker() {
+export function LiveTicker({ items = [] }) {
+    // Fall back to a "monitoring" placeholder if data isn't loaded yet
+    const ticker = items.length > 0
+        ? items
+        : [{ l: "INFO", t: "Initializing real-time AML feed…", a: false }];
+
     return (
         <div
             style={{
@@ -23,7 +27,7 @@ export function LiveTicker() {
             </div>
             <div style={{ flex: 1, overflow: "hidden" }}>
                 <div className="ticker-track">
-                    {[...TICKER_ITEMS, ...TICKER_ITEMS].map((item, i) => (
+                    {[...ticker, ...ticker].map((item, i) => (
                         <span key={i} style={{ fontSize: 10, color: item.a ? C.accent2 : C.muted, whiteSpace: "nowrap" }}>
                             [<span style={{ color: item.a ? C.accent2 : C.text }}>{item.l}</span>] {item.t}
                         </span>

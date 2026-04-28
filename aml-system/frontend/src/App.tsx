@@ -7,7 +7,7 @@ import { FontLoader, GlobalStyles } from "./components/GlobalStyles";
 import { useWindowWidth }    from "./hooks/useWindowWidth";
 import { useToasts }         from "./hooks/useToasts";
 import { useClock }          from "./hooks/useClock";
-import { useLiveSimulation } from "./hooks/useLiveSimulation";
+import { useLiveData } from "./hooks/useLiveData";
 
 // Components
 import { Topbar }             from "./components/Topbar";
@@ -37,13 +37,18 @@ export default function App() {
 
   const { toasts, addToast, removeToast } = useToasts();
   const { clock, lastUpdate }             = useClock();
+
   const {
     transactions,
     liveAlerts,
     kpis,
+    riskEntities,            
+    alertBreakdown,
+    geoData,
+    tickerItems,
     escalateTransaction,
     clearTransaction,
-  } = useLiveSimulation(addToast);
+  } = useLiveData(addToast);
 
   // Welcome toast on mount
   useEffect(() => {
@@ -113,10 +118,14 @@ export default function App() {
 
       {/* Mobile sidebar backdrop */}
       {isMobile && sidebarOpen && (
-        <div
-          onClick={() => setSidebarOpen(false)}
-          style={{ position: "fixed", inset: 0, zIndex: 150, background: "rgba(0,0,0,.3)" }}
-        />
+          <div
+            onClick={() => setSidebarOpen(false)}
+            style={{
+              position: "fixed",
+              inset: 0,
+              zIndex: 150,
+            }}
+          />
       )}
 
       {/* Layout: sidebar + main */}
@@ -126,85 +135,146 @@ export default function App() {
           setActiveNav={(name) => { setActiveNav(name); if (isMobile) setSidebarOpen(false); }}
           isMobile={isMobile}
           sidebarOpen={sidebarOpen}
-          alertCount={kpis.alertCount}
+          alertCount={kpis.critical}
         />
 
         <main
-          style={{
-            flex: 1,
-            padding: "22px 24px",
-            minHeight: "calc(100vh - 56px)",
-            minWidth: 0,
-            transition: "margin-right .3s ease",
-            marginRight: !isMobile && alertsOpen ? 300 : 0,
-          }}
+            style={{
+                flex: 1,
+                padding: "22px 24px",
+                minHeight: "calc(100vh - 56px)",
+                minWidth: 0,
+                transition: "margin-right .3s ease",
+                marginRight: !isMobile && alertsOpen ? 300 : 0,
+            }}
         >
-          {/* Page header */}
-          <div style={{ marginBottom: 20, animation: "fadeUp .5s ease both" }}>
-            <div className="page-title-text" style={{ fontFamily: "'Syne',sans-serif", fontWeight: 700, fontSize: 20, letterSpacing: ".05em", marginBottom: 4 }}>
-              AML Command Center
+            {/* Page header */}
+            <div style={{ marginBottom: 20, animation: "fadeUp .5s ease both" }}>
+                <div style={{
+                    position: "fixed",
+                    top: 60,
+                    right: 20,
+                    zIndex: 9999,
+                    padding: "6px 12px",
+                    background: "#ff4c6c",
+                    color: "white",
+                    fontSize: 12,
+                    fontFamily: "monospace",
+                    borderRadius: 4,
+                  }}>
+                    activeNav: {activeNav}
+                </div>
+                <div className="page-title-text" style={{ fontFamily: "'Syne',sans-serif", fontWeight: 700, fontSize: 20, letterSpacing: ".05em", marginBottom: 4 }}>
+                    {activeNav === "Overview"      && "AML Command Center"}
+                    {activeNav === "Alerts"        && "All Alerts"}
+                    {activeNav === "Transactions"  && "All Transactions"}
+                    {activeNav === "Network Graph" && "Network Graph"}
+                    {activeNav === "Entities"      && "Risk Entities"}
+                    {!["Overview","Alerts","Transactions","Network Graph","Entities"].includes(activeNav) && activeNav}
+                </div>
+                <div style={{ fontSize: 11, color: C.muted }}>
+                    Last updated · {lastUpdate} · Monitoring {kpis.alertCount.toLocaleString()} alerts · {kpis.txCount.toLocaleString()} transactions today
+                </div>
             </div>
-            <div style={{ fontSize: 11, color: C.muted }}>
-              Last updated · {lastUpdate} · Monitoring 2,400,000 accounts · {kpis.txCount.toLocaleString()} transactions today
-            </div>
-          </div>
 
-          {/* Live ticker */}
-          <LiveTicker />
+            {/* ===== OVERVIEW (main dashboard) ===== */}
+            {activeNav === "Overview" && (
+                <>
+                    <LiveTicker items={tickerItems} />
 
-          {/* KPI grid */}
-          <div className="kpi-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 12, marginBottom: 18 }}>
-            <KpiCard
-              variant="danger" icon="🚨" label="Critical Alerts" value={kpis.critical}
-              delta={`↑ ${kpis.critical - 18} vs baseline`} deltaUp
-              sparkData={kpis.spark.critical} sparkColor={C.accent2}
-              flash={flashKpi === "critical"}
-              onClick={() => setModal({ type: "kpi", data: { label: "Critical Alerts", value: kpis.critical } })}
-            />
-            <KpiCard
-              variant="warning" icon="⚠" label="Pending Review" value={kpis.pending}
-              delta="↑ 12 new today" deltaUp
-              sparkData={kpis.spark.pending} sparkColor={C.accent3}
-              onClick={() => setModal({ type: "kpi", data: { label: "Pending Review", value: kpis.pending } })}
-            />
-            <KpiCard
-              variant="success" icon="✓" label="Cleared Today" value={kpis.cleared}
-              delta="↑ 18% above target"
-              sparkData={kpis.spark.cleared} sparkColor={C.green}
-              onClick={() => setModal({ type: "kpi", data: { label: "Cleared Today", value: kpis.cleared } })}
-            />
-            <KpiCard
-              variant="info" icon="$" label="Flagged Volume" value={`$${Math.round(kpis.volume / 100000) / 10}M`}
-              delta="↑ 8.2% this week" deltaUp
-              sparkData={kpis.spark.volume} sparkColor={C.accent}
-              onClick={() => setModal({ type: "kpi", data: { label: "Flagged Volume", value: `$${Math.round(kpis.volume / 100000) / 10}M` } })}
-            />
-          </div>
+                    <div className="kpi-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 12, marginBottom: 18 }}>
+                        <KpiCard variant="danger"  icon="🚨" label="Critical Alerts" value={kpis.critical} delta={`↑ ${kpis.critical - 18} vs baseline`} deltaUp sparkData={kpis.spark.critical} sparkColor={C.accent2} flash={flashKpi === "critical"} onClick={() => setModal({ type: "kpi", data: { label: "Critical Alerts", value: kpis.critical } })} />
+                        <KpiCard variant="warning" icon="⚠"  label="Pending Review"  value={kpis.pending}  delta="↑ 12 new today" deltaUp sparkData={kpis.spark.pending}  sparkColor={C.accent3} onClick={() => setModal({ type: "kpi", data: { label: "Pending Review", value: kpis.pending } })} />
+                        <KpiCard variant="success" icon="✓"  label="Cleared Today"   value={kpis.cleared}  delta="↑ 18% above target" sparkData={kpis.spark.cleared}  sparkColor={C.green}  onClick={() => setModal({ type: "kpi", data: { label: "Cleared Today", value: kpis.cleared } })} />
+                        <KpiCard variant="info"    icon="$"  label="Flagged Volume"  value={`$${Math.round(kpis.volume / 100000) / 10}M`} delta="↑ 8.2% this week" deltaUp sparkData={kpis.spark.volume} sparkColor={C.accent} onClick={() => setModal({ type: "kpi", data: { label: "Flagged Volume", value: `$${Math.round(kpis.volume / 100000) / 10}M` } })} />
+                    </div>
 
-          {/* Chart + Entities row */}
-          <div className="main-grid" style={{ display: "grid", gridTemplateColumns: "1fr 300px", gap: 16, marginBottom: 16 }}>
-            <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 6, overflow: "hidden", animation: "fadeUp .5s ease both" }}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "11px 16px", borderBottom: `1px solid ${C.border}` }}>
-                <span style={{ fontSize: 11, letterSpacing: ".12em", textTransform: "uppercase", fontWeight: 600 }}>Alert Activity — Last 14 Days</span>
-                <span onClick={handleExportCSV} style={{ fontSize: 10, color: C.accent, cursor: "pointer" }}>Export CSV ↗</span>
-              </div>
-              <BarChart />
-            </div>
-            <RiskEntitiesPanel onEntityClick={handleEntityClick} />
-          </div>
+                    <div className="main-grid" style={{ display: "grid", gridTemplateColumns: "1fr 300px", gap: 16, marginBottom: 16 }}>
+                        <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 6, overflow: "hidden", animation: "fadeUp .5s ease both" }}>
+                            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "11px 16px", borderBottom: `1px solid ${C.border}` }}>
+                                <span style={{ fontSize: 11, letterSpacing: ".12em", textTransform: "uppercase", fontWeight: 600 }}>Alert Breakdown — AML Patterns</span>
+                                <span onClick={handleExportCSV} style={{ fontSize: 10, color: C.accent, cursor: "pointer" }}>Export CSV ↗</span>
+                            </div>
+                            <BarChart data={alertBreakdown} />
+                        </div>
+                        <RiskEntitiesPanel entities={riskEntities} onEntityClick={handleEntityClick} />
+                    </div>
 
-          {/* Transactions table */}
-          <TransactionsTable
-            transactions={transactions}
-            onReview={(r) => setModal({ type: "tx", data: r })}
-            onExport={handleExportCSV}
-          />
+                    <TransactionsTable
+                        transactions={transactions}
+                        onReview={(r) => setModal({ type: "tx", data: r })}
+                        onExport={handleExportCSV}
+                    />
 
-          {/* Geo + Rules row */}
-          <div className="bottom-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-            <GeoPanel onCountryClick={(g) => addToast(`${g.f} ${g.n}`, `${g.v} flagged transactions this month`, "info")} />
-            <RulesPanel />
-          </div>
+                    <div className="bottom-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+                        <GeoPanel data={geoData} onCountryClick={(g) => addToast(`${g.f} ${g.n}`, `${g.v} flagged transactions this month`, "info")} />
+                        <RulesPanel data={alertBreakdown} />
+                    </div>
+                </>
+            )}
+
+            {/* ===== ALERTS PAGE ===== */}
+            {activeNav === "Alerts" && (
+                <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 6, padding: 20 }}>
+                    <div style={{ fontSize: 13, marginBottom: 16, color: C.muted }}>
+                        Showing {liveAlerts.length} most recent alerts from real-time AML detection
+                    </div>
+                    <div style={{ display: "grid", gap: 8 }}>
+                        {liveAlerts.map((a, i) => (
+                            <div key={i} style={{
+                                padding: "10px 14px",
+                                background: C.surface2,
+                                border: `1px solid ${a.lv === "critical" ? C.accent2 : C.border}`,
+                                borderRadius: 4,
+                                display: "flex",
+                                gap: 12,
+                                alignItems: "center",
+                            }}>
+                                <span style={{
+                                    fontSize: 9,
+                                    padding: "2px 7px",
+                                    borderRadius: 2,
+                                    background: a.lv === "critical" ? C.accent2 : C.surface,
+                                    color: a.lv === "critical" ? "#fff" : C.muted,
+                                    textTransform: "uppercase",
+                                    letterSpacing: ".08em",
+                                    fontWeight: 600,
+                                }}>{a.lv}</span>
+                                <span style={{ fontSize: 11, color: C.text, flex: 1 }}>{a.s}</span>
+                                <span style={{ fontSize: 10, color: C.muted, fontFamily: "'IBM Plex Mono',monospace" }}>{a.time}</span>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {/* ===== TRANSACTIONS PAGE ===== */}
+            {activeNav === "Transactions" && (
+                <TransactionsTable
+                    transactions={transactions}
+                    onReview={(r) => setModal({ type: "tx", data: r })}
+                    onExport={handleExportCSV}
+                />
+            )}
+
+            {/* ===== ENTITIES PAGE ===== */}
+            {activeNav === "Entities" && (
+                <RiskEntitiesPanel entities={riskEntities} onEntityClick={handleEntityClick} />
+            )}
+
+            {/* ===== PLACEHOLDER for unimplemented pages ===== */}
+            {!["Overview", "Alerts", "Transactions", "Entities"].includes(activeNav) && (
+                <div style={{ padding: 60, textAlign: "center", background: C.surface, border: `1px solid ${C.border}`, borderRadius: 6 }}>
+                    <div style={{ fontSize: 36, opacity: 0.3, marginBottom: 12 }}>🚧</div>
+                    <div style={{ fontSize: 14, color: C.text, marginBottom: 6, fontFamily: "'Syne',sans-serif", fontWeight: 600 }}>
+                        {activeNav}
+                    </div>
+                    <div style={{ fontSize: 11, color: C.muted, maxWidth: 400, margin: "0 auto", lineHeight: 1.6 }}>
+                        Future work — this view will provide dedicated functionality for {activeNav.toLowerCase()}.
+                        Backed by the same Athena-driven data layer as the Overview.
+                    </div>
+                </div>
+            )}
         </main>
       </div>
 

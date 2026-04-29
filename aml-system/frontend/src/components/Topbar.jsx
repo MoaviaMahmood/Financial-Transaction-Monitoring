@@ -43,8 +43,24 @@ export function Topbar({ clock, alertCount, isMobile, onMenuClick, onAlertsClick
                     onClick={onAlertsClick}
                 >
                     🔔
-                    <div style={{ position: "absolute", top: -4, right: -4, background: C.accent2, color: "#fff", fontSize: 9, width: 16, height: 16, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                        {alertCount}
+                    <div style={{
+                        position: "absolute",
+                        top: -4,
+                        right: -4,
+                        background: C.accent2,
+                        color: "#fff",
+                        fontSize: 9,
+                        fontWeight: 700,
+                        minWidth: 16,
+                        height: 16,
+                        padding: "0 4px",
+                        borderRadius: 8,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontFamily: "'IBM Plex Mono', monospace",
+                    }}>
+                        {alertCount > 99 ? '99+' : alertCount}
                     </div>
                 </div>
                 <div

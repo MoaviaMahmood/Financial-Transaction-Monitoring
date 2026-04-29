@@ -21,11 +21,11 @@ function NavItem({ item, active, onClick }) {
         >
             <span style={{ fontSize: 13, width: 16, textAlign: "center" }}>{item.icon}</span>
             {item.name}
-            {item.badge != null && (
-                <span style={{ marginLeft: "auto", background: C.accent2, color: "#fff", fontSize: 9, padding: "1px 5px", borderRadius: 2 }}>
-                    {item.badge}
-                </span>
-            )}
+                {item.badge != null && (
+                    <span style={{ marginLeft: "auto", background: C.accent2, color: "#fff", fontSize: 9, padding: "1px 5px", borderRadius: 2 }}>
+                        {item.badge > 99 ? '99+' : item.badge}
+                    </span>
+                )}
         </div>
     );
 }

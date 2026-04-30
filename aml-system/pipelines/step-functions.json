@@ -1,0 +1,42 @@
+{
+    "Comment": "AML Data Generation Pipeline",
+    "StartAt": "Entities",
+    "States": {
+        "Entities": {
+            "Type": "Task",
+            "Resource": "arn:aws:states:::lambda:invoke",
+            "OutputPath": "$.Payload",
+            "Parameters": {
+                "Payload.$": "$",
+                "FunctionName": "arn:aws:lambda:eu-north-1:591950085395:function:Entities-Generator:$LATEST"
+            },
+            "Retry": [
+                {
+                    "ErrorEquals": [
+                        "Lambda.ServiceException",
+                        "Lambda.AWSLambdaException",
+                        "Lambda.SdkClientException",
+                        "Lambda.TooManyRequestsException"
+                    ],
+                    "IntervalSeconds": 1,
+                    "MaxAttempts": 3,
+                    "BackoffRate": 2,
+                    "JitterStrategy": "FULL"
+                }
+            ],
+            "Next": "GenerateTransactions"
+        },
+        "GenerateTransactions": {
+            "Type": "Task",
+            "Resource": "arn:aws:lambda:eu-north-1:591950085395:function:Transactions-Generator:$LATEST",
+            "TimeoutSeconds": 120,
+            "Next": "GenerateAlerts"
+        },
+        "GenerateAlerts": {
+            "Type": "Task",
+            "Resource": "arn:aws:lambda:eu-north-1:591950085395:function:Alerts-Generator:$LATEST",
+            "TimeoutSeconds": 60,
+            "End": true
+        }
+    }
+}

@@ -1,9 +1,9 @@
 articles/
 *.docx
 *.xlsx
-*.pdf
 *.pem
 *.csv
 *.drawio
 *.bkp
 .env
+*.bkp

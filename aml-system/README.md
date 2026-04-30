@@ -19,7 +19,7 @@ aml-system/
 
 | Component | AWS service | Trigger | Purpose |
 |---|---|---|---|
-| `Entities-Generator` | Lambda | EventBridge (every 5 min) | Generate 300 customers + 450 accounts; write CSV to S3 |
+| `Entities-Generator` | Lambda | Step Functions | Generate 300 customers + 450 accounts; write CSV to S3 |
 | `GenerateTransactions` | Lambda | Step Functions | Read entities, build 100+ transactions, publish to Kinesis |
 | `GenerateAlerts` | Lambda | Step Functions | Batch alerting layer (parallel to real-time path) |
 | `AML Consumer` | Lambda | Kinesis stream | Apply 14 AML rules per transaction, write alerts to S3 |

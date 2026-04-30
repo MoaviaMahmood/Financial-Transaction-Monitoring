@@ -79,7 +79,7 @@ Then create the EventBridge rule that targets it:
             "OutputPath": "$.Payload",
             "Parameters": {
                 "Payload.$": "$",
-                "FunctionName": "arn:aws:lambda:eu-north-1:591950085395:function:Entities-Generator:$LATEST"
+                "FunctionName": "arn:aws:lambda:eu-north-1:<account>:function:Entities-Generator:$LATEST"
             },
             "Retry": [
                 {
@@ -99,13 +99,13 @@ Then create the EventBridge rule that targets it:
         },
         "GenerateTransactions": {
             "Type": "Task",
-            "Resource": "arn:aws:lambda:eu-north-1:591950085395:function:Transactions-Generator:$LATEST",
+            "Resource": "arn:aws:lambda:eu-north-1:<account>:function:Transactions-Generator:$LATEST",
             "TimeoutSeconds": 120,
             "Next": "GenerateAlerts"
         },
         "GenerateAlerts": {
             "Type": "Task",
-            "Resource": "arn:aws:lambda:eu-north-1:591950085395:function:Alerts-Generator:$LATEST",
+            "Resource": "arn:aws:lambda:eu-north-1:<account>:function:Alerts-Generator:$LATEST",
             "TimeoutSeconds": 60,
             "End": true
         }

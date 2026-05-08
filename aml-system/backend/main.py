@@ -165,7 +165,7 @@ def alert_breakdown():
     FROM aml_db.alerts_clean
     GROUP BY alert_type
     ORDER BY COUNT(*) DESC
-    LIMIT 14
+    LIMIT 40
     """
     return query(sql)
 

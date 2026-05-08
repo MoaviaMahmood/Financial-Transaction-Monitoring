@@ -53,10 +53,11 @@ SELECT
     (a.transaction_id IS NOT NULL)                  AS was_flagged,
     COALESCE(a.num_alerts,        0)                AS num_alerts,
     COALESCE(a.max_alert_score,   0.0)              AS max_alert_score,
-    COALESCE(a.fired_rules,       ARRAY[] )          AS fired_rules
+    COALESCE(a.fired_rules,       ARRAY[]
+)          AS fired_rules
 FROM aml_db.transactions_clean t
 LEFT JOIN alerts_agg a
-       ON a.transaction_id = t.transaction_id;
+    ON a.transaction_id = t.transaction_id;
 
 
 -- =============================================================================

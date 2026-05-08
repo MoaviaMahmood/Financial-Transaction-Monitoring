@@ -1,2 +1,14 @@
-# AWS SDK (provided by Lambda runtime, included here for local testing)
 boto3>=1.35.0
+io
+sys
+uuid
+random
+json
+csv
+os
+boto3
+datetime 
+timezone
+dataclasses 
+dataclass
+asdict

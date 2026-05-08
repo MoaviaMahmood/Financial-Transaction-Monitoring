@@ -7,3 +7,9 @@ articles/
 *.bkp
 .env
 *.bkp
+*.venv
+*.ipynb_checkpoints
+__pycache__/
+*.log
+*.db
+*.sqlite
